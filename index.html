@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WarpOrbs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Audio Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #000000; /* Black background */
+            color: #f0f0f0; /* Light gray text */
+            overflow-y: auto; /* Allow scrolling on smaller screens */
+        }
+        .glass-panel {
+            background: rgba(255, 223, 0, 0.05); /* Faint yellow glass */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 223, 0, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .game-canvas {
+            cursor: pointer;
+            /* Yellow glow for the game frame */
+            filter: drop-shadow(0 0 15px rgba(255, 223, 0, 0.5));
+        }
+        .btn-glass {
+            background: rgba(255, 223, 0, 0.1);
+            border: 1px solid rgba(255, 223, 0, 0.3);
+            color: #FFD700; /* Gold text */
+            transition: all 0.3s ease;
+        }
+        .btn-glass:hover {
+            background: rgba(255, 223, 0, 0.2);
+            box-shadow: 0 0 15px rgba(255, 223, 0, 0.6);
+        }
+        .text-yellow-glow {
+            color: #FFD700; /* Gold color for main text */
+            text-shadow: 0 0 8px rgba(255, 223, 0, 0.7);
+        }
+        /* Styles for the name entry modal */
+        .modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+        .modal-content {
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 223, 0, 0.5);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 0 30px rgba(255, 223, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+        }
+        .modal-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 223, 0, 0.5);
+            border-radius: 8px;
+            color: white;
+            padding: 0.5rem 1rem;
+            width: 100%;
+        }
+        .modal-input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(255, 223, 0, 0.5);
+        }
+        .highscore-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 223, 0, 0.1);
+        }
+         .highscore-list li:last-child {
+            border-bottom: none;
+        }
+        .touch-control {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10+ */
+            user-select: none; /* Standard syntax */
+        }
+        .touch-control:active {
+            transform: scale(0.95);
+            background: rgba(255, 223, 0, 0.25);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-5xl mx-auto p-4 md:p-8 flex flex-col items-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-center mb-6 text-yellow-glow">WarpOrbs</h1>
+
+        <div class="flex flex-col md:flex-row justify-center items-center gap-8">
+
+            <!-- Game Canvas Container -->
+            <div id="game-container" class="relative">
+                <canvas id="tetris-canvas" class="game-canvas"></canvas>
+                <!-- Name Entry Modal -->
+                <div id="name-modal" class="modal-overlay hidden">
+                    <div class="modal-content text-center">
+                        <h2 class="text-2xl font-bold text-yellow-glow mb-4">New High Score!</h2>
+                        <p class="mb-4">Enter your name:</p>
+                        <input type="text" id="player-name" class="modal-input mb-4" maxlength="10" placeholder="AAA">
+                        <button id="save-score-button" class="btn-glass w-full py-2 rounded-lg">Save Score</button>
+                    </div>
+                </div>
+                 <!-- Donate Modal -->
+                <div id="donate-modal" class="modal-overlay hidden">
+                    <div class="modal-content text-center">
+                        <h2 class="text-2xl font-bold text-yellow-glow mb-4">Support the Game!</h2>
+                        <p class="mb-6 text-gray-300">If you're enjoying WarpOrbs, please consider supporting its development on Ko-fi. Thank you!</p>
+                        <a href="https://ko-fi.com/budeemendoza" target="_blank" rel="noopener noreferrer" class="btn-glass w-full py-2 rounded-lg inline-block">
+                            Visit Ko-fi Page
+                        </a>
+                        <button id="close-donate-button" class="btn-glass w-full py-2 rounded-lg mt-4">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Info Panel -->
+            <div class="glass-panel p-6 w-full md:w-64 flex flex-col gap-4">
+                <!-- Sound Control Button -->
+                <div class="flex justify-end">
+                    <button id="mute-button" class="text-yellow-400 hover:text-white transition-colors">
+                        <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                        <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="1" x2="1" y2="23"></line></svg>
+                    </button>
+                </div>
+
+                <!-- High Score Display on Panel -->
+                <div class="mb-2">
+                    <h2 class="text-xl font-bold text-center text-yellow-glow mb-2">Top 5 Scores</h2>
+                    <ol id="highscore-panel-list" class="highscore-list text-sm space-y-1"></ol>
+                </div>
+
+                <div class="w-full h-px bg-yellow-500/20"></div>
+
+                <div class="flex justify-between items-center w-full">
+                    <h2 class="text-2xl font-bold text-yellow-glow">Score</h2>
+                    <p id="score" class="text-3xl font-bold text-white">0</p>
+                </div>
+                 <div class="flex justify-between items-center w-full">
+                    <h2 class="text-2xl font-bold text-yellow-glow">Lines</h2>
+                    <p id="lines" class="text-3xl font-bold text-white">0</p>
+                </div>
+                <div class="flex justify-between items-center w-full">
+                    <h2 class="text-2xl font-bold text-yellow-glow">Level</h2>
+                    <p id="level" class="text-3xl font-bold text-white">1</p>
+                </div>
+                
+                <div class="w-full h-px bg-yellow-500/20"></div>
+
+                <div>
+                    <h2 class="text-lg font-bold text-center mt-2 text-yellow-glow">Next Orb</h2>
+                    <canvas id="next-piece-canvas" width="120" height="120"></canvas>
+                </div>
+                <button id="start-button" class="btn-glass w-full py-3 mt-4 rounded-lg text-xl font-bold">Start Game</button>
+            </div>
+        </div>
+
+        <!-- Touch Controls for Mobile -->
+        <div id="touch-controls" class="mt-8 flex w-full max-w-md justify-between items-center">
+            <div class="flex gap-4">
+                <button id="left-button" class="btn-glass rounded-full touch-control">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
+                <button id="right-button" class="btn-glass rounded-full touch-control">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </button>
+            </div>
+            <div class="flex gap-4">
+                <button id="rotate-button" class="btn-glass rounded-full touch-control">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                </button>
+                <button id="drop-button" class="btn-glass rounded-full touch-control">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Donate Button -->
+    <button id="donate-button" class="fixed bottom-4 right-4 btn-glass rounded-full p-3 flex items-center gap-2 z-40">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        <span class="hidden sm:inline">Donate</span>
+    </button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas and Context setup
+            const canvas = document.getElementById('tetris-canvas');
+            const ctx = canvas.getContext('2d');
+            const nextCanvas = document.getElementById('next-piece-canvas');
+            const nextCtx = nextCanvas.getContext('2d');
+
+            // Game constants
+            const COLS = 10;
+            const ROWS = 20;
+            const BLOCK_SIZE = 30;
+            const LINES_PER_LEVEL = 10;
+            const MAX_HIGH_SCORES = 5;
+            
+            // UI Elements
+            const scoreElement = document.getElementById('score');
+            const linesElement = document.getElementById('lines');
+            const levelElement = document.getElementById('level');
+            const startButton = document.getElementById('start-button');
+            const muteButton = document.getElementById('mute-button');
+            const iconSoundOn = document.getElementById('icon-sound-on');
+            const iconSoundOff = document.getElementById('icon-sound-off');
+            const highscorePanelList = document.getElementById('highscore-panel-list');
+            
+            // Modal Elements
+            const nameModal = document.getElementById('name-modal');
+            const playerNameInput = document.getElementById('player-name');
+            const saveScoreButton = document.getElementById('save-score-button');
+            const donateModal = document.getElementById('donate-modal');
+            const donateButton = document.getElementById('donate-button');
+            const closeDonateButton = document.getElementById('close-donate-button');
+
+            // Touch Control Buttons
+            const leftButton = document.getElementById('left-button');
+            const rightButton = document.getElementById('right-button');
+            const rotateButton = document.getElementById('rotate-button');
+            const dropButton = document.getElementById('drop-button');
+
+            let board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+            let highScores = [];
+            let currentPiece;
+            let nextPiece;
+            let score = 0;
+            let lines = 0;
+            let level = 1;
+            let gameOver = true;
+            let lastTime = 0;
+            let dropCounter = 0;
+            let dropInterval = 1000;
+            let animationFrameId;
+            let audioStarted = false;
+            let repeatInterval = null;
+
+            const SHAPES = [
+                [[1, 1, 1, 1]], [[1, 1, 1], [0, 1, 0]], [[1, 1, 0], [0, 1, 1]], 
+                [[0, 1, 1], [1, 1, 0]], [[1, 1], [1, 1]], [[1, 0, 0], [1, 1, 1]], 
+                [[0, 0, 1], [1, 1, 1]]
+            ];
+
+            const COLORS = [
+                '#FFD700', '#F0E68C', '#BDB76B', '#FFFFFF', '#C0C0C0', '#FFBF00', '#A9A9A9'
+            ];
+            
+            // Set canvas dimensions
+            canvas.width = COLS * BLOCK_SIZE;
+            canvas.height = ROWS * BLOCK_SIZE;
+
+            // --- Audio Setup ---
+            const synth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: 'fmsquare' },
+                envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 1 },
+                volume: -12
+            }).toDestination();
+
+            const moveSound = () => synth.triggerAttackRelease('C2', '8n', Tone.now());
+            const rotateSound = () => synth.triggerAttackRelease('E3', '8n', Tone.now());
+            const dropSound = () => synth.triggerAttackRelease('C1', '8n', Tone.now());
+            const clearLineSound = () => synth.triggerAttackRelease(['C4', 'E4', 'G4'], '8n', Tone.now());
+            const multiClearSound = () => synth.triggerAttackRelease(['C5', 'E5', 'G5', 'C6'], '8n', Tone.now());
+            const levelUpSound = () => synth.triggerAttackRelease(['C4', 'D4', 'E4', 'F#4', 'A5'], '4n', Tone.now());
+            const gameOverSound = () => synth.triggerAttackRelease(['C3', 'A2', 'F2', 'C2'], '4n', Tone.now());
+
+            const musicSynth = new Tone.FMSynth({
+                volume: -6,
+                envelope: { attack: 0.05, decay: 0.2, sustain: 0.1, release: 0.5 }
+            }).toDestination();
+
+            const musicPattern = new Tone.Sequence((time, note) => {
+                musicSynth.triggerAttackRelease(note, '16n', time);
+            }, ['C2', 'E2', 'G2', 'B2', 'C3', 'B2', 'G2', 'E2'], '8n');
+
+            Tone.Transport.bpm.value = 120;
+
+            // --- High Score Logic ---
+            function loadHighScores() {
+                const storedScores = localStorage.getItem('warpOrbsHighScores');
+                highScores = storedScores ? JSON.parse(storedScores) : [];
+                updateHighScorePanel();
+            }
+
+            function saveHighScores() {
+                localStorage.setItem('warpOrbsHighScores', JSON.stringify(highScores));
+            }
+
+            function checkHighScore() {
+                const lowestHighScore = highScores.length < MAX_HIGH_SCORES ? 0 : highScores[MAX_HIGH_SCORES - 1].score;
+                if (score > 0 && score >= lowestHighScore) {
+                    nameModal.classList.remove('hidden');
+                    playerNameInput.focus();
+                }
+            }
+            
+            function addNewHighScore(name) {
+                highScores.push({ name, score });
+                highScores.sort((a, b) => b.score - a.score);
+                highScores.splice(MAX_HIGH_SCORES);
+                saveHighScores();
+                updateHighScorePanel();
+            }
+
+            function updateHighScorePanel() {
+                highscorePanelList.innerHTML = '';
+                if (highScores.length === 0) {
+                    highscorePanelList.innerHTML = '<li class="text-center opacity-50">No scores yet!</li>';
+                } else {
+                    for (let i = 0; i < MAX_HIGH_SCORES; i++) {
+                        const li = document.createElement('li');
+                        if (highScores[i]) {
+                            li.innerHTML = `<span>${i + 1}. ${highScores[i].name}</span><span class="opacity-75">${highScores[i].score}</span>`;
+                        } else {
+                             li.innerHTML = `<span>${i + 1}. ...</span><span class="opacity-50">---</span>`;
+                        }
+                        highscorePanelList.appendChild(li);
+                    }
+                }
+            }
+
+            // --- Distortion & Drawing ---
+            function transform(x, y) {
+                const halfW = canvas.width / 2;
+                const halfH = canvas.height / 2;
+                const strength = 0.4; 
+                const nx = (x - halfW) / halfW;
+                const ny = (y - halfH) / halfH;
+                const distortionFactor = (1.0 - nx * nx) * (1.0 - ny * ny);
+                const offsetX = (x - halfW) * distortionFactor * strength;
+                const offsetY = (y - halfH) * distortionFactor * strength;
+                return { x: x + offsetX, y: y + offsetY };
+            }
+            
+            function drawBubble(ctx, x, y, size, color) {
+                const transformed = transform(x + size / 2, y + size / 2);
+                const transformedNeighbor = transform(x + size, y + size);
+                const distortedSize = Math.min(Math.abs(transformedNeighbor.x - transformed.x), Math.abs(transformedNeighbor.y - transformed.y)) * 1.5;
+                const centerX = transformed.x;
+                const centerY = transformed.y;
+                const gradient = ctx.createRadialGradient(centerX - distortedSize * 0.25, centerY - distortedSize * 0.25, distortedSize * 0.1, centerX, centerY, distortedSize / 2);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+                gradient.addColorStop(0.5, color);
+                gradient.addColorStop(1, chroma(color).darken(2).hex());
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, distortedSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            function drawGrid() {
+                ctx.strokeStyle = 'rgba(255, 223, 0, 0.15)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= COLS; i++) {
+                    const x = i * BLOCK_SIZE;
+                    ctx.beginPath();
+                    let p = transform(x, 0);
+                    ctx.moveTo(p.x, p.y);
+                    for (let j = 1; j <= canvas.height; j++) {
+                        p = transform(x, j);
+                        ctx.lineTo(p.x, p.y);
+                    }
+                    ctx.stroke();
+                }
+                for (let i = 0; i <= ROWS; i++) {
+                    const y = i * BLOCK_SIZE;
+                    ctx.beginPath();
+                    let p = transform(0, y);
+                    ctx.moveTo(p.x, p.y);
+                    for (let j = 1; j <= canvas.width; j++) {
+                        p = transform(j, y);
+                        ctx.lineTo(p.x, p.y);
+                    }
+                    ctx.stroke();
+                }
+            }
+            
+            function drawBoard() {
+                for (let row = 0; row < ROWS; row++) {
+                    for (let col = 0; col < COLS; col++) {
+                        if (board[row][col]) drawBubble(ctx, col * BLOCK_SIZE, row * BLOCK_SIZE, BLOCK_SIZE, COLORS[board[row][col] - 1]);
+                    }
+                }
+            }
+
+            function drawPiece(piece) {
+                if (!piece) return;
+                const color = COLORS[piece.colorIndex];
+                piece.shape.forEach((row, y) => {
+                    row.forEach((value, x) => {
+                        if (value !== 0) drawBubble(ctx, (piece.x + x) * BLOCK_SIZE, (piece.y + y) * BLOCK_SIZE, BLOCK_SIZE, color);
+                    });
+                });
+            }
+            
+            function drawGameOverText() {
+                ctx.fillStyle = '#E53E3E';
+                ctx.font = 'bold 36px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'red';
+                ctx.shadowBlur = 15;
+                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'white';
+                ctx.font = '24px Orbitron';
+                ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + 30);
+            }
+
+            function drawNextPiece() {
+                nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+                if (!nextPiece) return;
+                const piece = nextPiece;
+                const color = COLORS[piece.colorIndex];
+                const shape = piece.shape;
+                const shapeWidth = shape[0].length;
+                const shapeHeight = shape.length;
+                const startX = (nextCanvas.width - shapeWidth * 20) / 2;
+                const startY = (nextCanvas.height - shapeHeight * 20) / 2;
+                shape.forEach((row, y) => {
+                    row.forEach((value, x) => {
+                        if (value !== 0) {
+                            const centerX = startX + x * 20 + 10;
+                            const centerY = startY + y * 20 + 10;
+                            const radius = 10;
+                            const gradient = nextCtx.createRadialGradient(centerX - radius * 0.25, centerY - radius * 0.25, radius * 0.1, centerX, centerY, radius);
+                            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+                            gradient.addColorStop(0.5, color);
+                            gradient.addColorStop(1, chroma(color).darken(2).hex());
+                            nextCtx.fillStyle = gradient;
+                            nextCtx.beginPath();
+                            nextCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                            nextCtx.fill();
+                        }
+                    });
+                });
+            }
+
+            // --- Game Logic ---
+
+            function createPiece() {
+                const index = Math.floor(Math.random() * SHAPES.length);
+                const shape = SHAPES[index];
+                return { x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2), y: 0, shape: shape, colorIndex: index };
+            }
+
+            async function resetGame() {
+                if (!audioStarted) {
+                    await Tone.start();
+                    audioStarted = true;
+                }
+                
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                board.forEach(row => row.fill(0));
+                score = 0;
+                lines = 0;
+                level = 1;
+                gameOver = false;
+                dropInterval = 1000;
+                Tone.Transport.bpm.value = 120;
+                lastTime = 0;
+                dropCounter = 0;
+                updateUI();
+                currentPiece = createPiece();
+                nextPiece = createPiece();
+                drawNextPiece();
+                musicPattern.start(0);
+                Tone.Transport.start();
+                gameLoop();
+            }
+
+            function updateUI() {
+                scoreElement.textContent = score;
+                linesElement.textContent = lines;
+                levelElement.textContent = level;
+            }
+
+            function collides(piece) {
+                for (let y = 0; y < piece.shape.length; y++) {
+                    for (let x = 0; x < piece.shape[y].length; x++) {
+                        if (piece.shape[y][x] !== 0) {
+                            let newX = piece.x + x;
+                            let newY = piece.y + y;
+                            if (newX < 0 || newX >= COLS || newY >= ROWS || (board[newY] && board[newY][newX])) return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            function merge(piece) {
+                piece.shape.forEach((row, y) => {
+                    row.forEach((value, x) => {
+                        if (value !== 0) board[piece.y + y][piece.x + x] = piece.colorIndex + 1;
+                    });
+                });
+                dropSound();
+            }
+            
+            function clearLines() {
+                let linesCleared = 0;
+                outer: for (let y = ROWS - 1; y >= 0; y--) {
+                    for (let x = 0; x < COLS; x++) {
+                        if (board[y][x] === 0) continue outer;
+                    }
+                    const row = board.splice(y, 1)[0].fill(0);
+                    board.unshift(row);
+                    y++;
+                    linesCleared++;
+                }
+                if (linesCleared > 0) {
+                    if (linesCleared > 1) {
+                        multiClearSound();
+                    } else {
+                        clearLineSound();
+                    }
+                    lines += linesCleared;
+                    score += linesCleared * 100 * linesCleared;
+                    const newLevel = Math.floor(lines / LINES_PER_LEVEL) + 1;
+                    if (newLevel > level) {
+                        level = newLevel;
+                        dropInterval = Math.max(100, 1000 * Math.pow(0.85, level - 1));
+                        Tone.Transport.bpm.value += 5;
+                        levelUpSound();
+                    }
+                    updateUI();
+                }
+            }
+
+            function rotate(piece) {
+                const newShape = piece.shape[0].map((_, colIndex) => piece.shape.map(row => row[colIndex]).reverse());
+                const oldX = piece.x;
+                const oldShape = piece.shape;
+                piece.shape = newShape;
+                let offset = 1;
+                while (collides(piece)) {
+                    piece.x += offset;
+                    offset = -(offset + (offset > 0 ? 1 : -1));
+                    if (offset > piece.shape[0].length) {
+                        piece.shape = oldShape;
+                        piece.x = oldX;
+                        return; // Rotation failed
+                    }
+                }
+                rotateSound(); // Play sound on successful rotation
+            }
+
+            function pieceDrop() {
+                currentPiece.y++;
+                if (collides(currentPiece)) {
+                    currentPiece.y--;
+                    merge(currentPiece);
+                    clearLines();
+                    currentPiece = nextPiece;
+                    nextPiece = createPiece();
+                    drawNextPiece();
+                    if (collides(currentPiece)) {
+                        gameOver = true;
+                        gameOverSound();
+                        Tone.Transport.stop();
+                        musicPattern.stop();
+                    }
+                }
+                dropCounter = 0;
+            }
+
+            // --- Game Loop ---
+
+            function gameLoop(time = 0) {
+                if (gameOver) {
+                    draw(); 
+                    cancelAnimationFrame(animationFrameId);
+                    checkHighScore();
+                    return;
+                }
+                const deltaTime = time - lastTime;
+                lastTime = time;
+                dropCounter += deltaTime;
+                if (dropCounter > dropInterval) pieceDrop();
+                draw();
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawGrid();
+                drawBoard();
+                drawPiece(currentPiece);
+                if (gameOver && !audioStarted) { // Show "Press Start" before game begins
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 24px Orbitron';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Press Start Game', canvas.width / 2, canvas.height / 2);
+                }
+                else if (gameOver && audioStarted) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    drawGameOverText();
+                }
+            }
+            
+            // --- Controls ---
+            function handleLeft() {
+                if (gameOver || !currentPiece) return;
+                currentPiece.x--;
+                if (collides(currentPiece)) currentPiece.x++;
+                else moveSound();
+            }
+            function handleRight() {
+                if (gameOver || !currentPiece) return;
+                currentPiece.x++;
+                if (collides(currentPiece)) currentPiece.x--;
+                else moveSound();
+            }
+            function handleRotate() {
+                if (gameOver || !currentPiece) return;
+                rotate(currentPiece);
+            }
+            function handleDrop() {
+                if (gameOver || !currentPiece) return;
+                pieceDrop();
+            }
+
+            function isModalOpen() {
+                return !nameModal.classList.contains('hidden') || !donateModal.classList.contains('hidden');
+            }
+
+            document.addEventListener('keydown', event => {
+                if (isModalOpen()) return;
+                if (gameOver) {
+                    if (event.code === 'Enter') resetGame();
+                    return;
+                };
+                if (event.code === 'ArrowLeft') handleLeft();
+                else if (event.code === 'ArrowRight') handleRight();
+                else if (event.code === 'ArrowDown') handleDrop();
+                else if (event.code === 'ArrowUp') handleRotate();
+            });
+
+            // --- Touch Controls with Long Press ---
+            const REPEAT_DELAY = 120; // ms for repeated action
+
+            function startRepeating(action) {
+                if (isModalOpen()) return;
+                stopRepeating();
+                action();
+                repeatInterval = setInterval(action, REPEAT_DELAY);
+            }
+
+            function stopRepeating() {
+                if (repeatInterval) {
+                    clearInterval(repeatInterval);
+                    repeatInterval = null;
+                }
+            }
+
+            leftButton.addEventListener('mousedown', () => startRepeating(handleLeft));
+            leftButton.addEventListener('touchstart', (e) => { e.preventDefault(); startRepeating(handleLeft); });
+
+            rightButton.addEventListener('mousedown', () => startRepeating(handleRight));
+            rightButton.addEventListener('touchstart', (e) => { e.preventDefault(); startRepeating(handleRight); });
+
+            dropButton.addEventListener('mousedown', () => startRepeating(handleDrop));
+            dropButton.addEventListener('touchstart', (e) => { e.preventDefault(); startRepeating(handleDrop); });
+
+            rotateButton.addEventListener('click', handleRotate);
+
+            document.addEventListener('mouseup', stopRepeating);
+            document.addEventListener('touchend', stopRepeating);
+            
+            // --- Initialization ---
+            startButton.addEventListener('click', resetGame);
+            muteButton.addEventListener('click', () => {
+                Tone.Destination.mute = !Tone.Destination.mute;
+                iconSoundOn.classList.toggle('hidden');
+                iconSoundOff.classList.toggle('hidden');
+            });
+            saveScoreButton.addEventListener('click', () => {
+                const name = playerNameInput.value.trim() || 'AAA';
+                nameModal.classList.add('hidden');
+                addNewHighScore(name);
+            });
+            playerNameInput.addEventListener('keydown', (e) => {
+                if (e.code === 'Enter') {
+                    saveScoreButton.click();
+                }
+            });
+            donateButton.addEventListener('click', () => {
+                donateModal.classList.remove('hidden');
+            });
+            closeDonateButton.addEventListener('click', () => {
+                donateModal.classList.add('hidden');
+            });
+
+
+            const script = document.createElement('script');
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js";
+            script.onload = () => {
+                 loadHighScores();
+                 draw(); 
+            };
+            document.head.appendChild(script);
+        });
+    </script>
+</body>
+</html>
