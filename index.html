@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>WarpOrbs</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -84,21 +84,18 @@
             display: flex;
             justify-content: space-between;
             padding: 0.25rem 0;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             border-bottom: 1px solid rgba(255, 223, 0, 0.1);
         }
          .highscore-list li:last-child {
             border-bottom: none;
         }
         .touch-control {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
-            -webkit-user-select: none; /* Safari */
-            -ms-user-select: none; /* IE 10+ */
-            user-select: none; /* Standard syntax */
         }
         .touch-control:active {
             transform: scale(0.95);
@@ -106,23 +103,23 @@
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center p-2 sm:p-4">
+<body class="flex flex-col items-center justify-center p-2">
 
     <div class="w-full h-full max-w-5xl mx-auto flex flex-col items-center">
-        <h1 class="text-3xl md:text-5xl font-bold text-center my-2 md:my-4 text-yellow-glow flex-shrink-0">WarpOrbs</h1>
+        <h1 class="text-3xl md:text-4xl font-bold text-center my-2 text-yellow-glow flex-shrink-0">WarpOrbs</h1>
 
-        <div class="flex flex-col md:flex-row justify-center items-center gap-8 w-full flex-grow min-h-0">
+        <div class="flex flex-row justify-center items-stretch gap-4 w-full flex-grow min-h-0">
 
             <!-- Game Column -->
-            <div class="flex flex-col items-center justify-center h-full w-full md:w-auto flex-grow min-h-0">
+            <div class="flex flex-col items-center justify-center h-full w-3/5 flex-grow min-h-0">
                 <!-- Game Canvas Container -->
-                <div id="game-container" class="relative w-full max-w-sm flex-grow min-h-0">
+                <div id="game-container" class="relative w-full flex-grow min-h-0">
                     <canvas id="tetris-canvas" class="game-canvas"></canvas>
                     <!-- Name Entry Modal -->
                     <div id="name-modal" class="modal-overlay hidden">
                         <div class="modal-content text-center">
-                            <h2 class="text-2xl font-bold text-yellow-glow mb-4">New High Score!</h2>
-                            <p class="mb-4">Enter your name:</p>
+                            <h2 class="text-xl font-bold text-yellow-glow mb-4">New High Score!</h2>
+                            <p class="mb-4 text-sm">Enter your name:</p>
                             <input type="text" id="player-name" class="modal-input mb-4" maxlength="10" placeholder="AAA">
                             <button id="save-score-button" class="btn-glass w-full py-2 rounded-lg">Save Score</button>
                         </div>
@@ -130,8 +127,8 @@
                      <!-- Donate Modal -->
                     <div id="donate-modal" class="modal-overlay hidden">
                         <div class="modal-content text-center">
-                            <h2 class="text-2xl font-bold text-yellow-glow mb-4">Support the Game!</h2>
-                            <p class="mb-6 text-gray-300">If you're enjoying WarpOrbs, please consider supporting its development on Ko-fi. Thank you!</p>
+                            <h2 class="text-xl font-bold text-yellow-glow mb-4">Support the Game!</h2>
+                            <p class="mb-6 text-gray-300 text-sm">If you're enjoying WarpOrbs, please consider supporting its development on Ko-fi. Thank you!</p>
                             <a href="https://ko-fi.com/budeemendoza" target="_blank" rel="noopener noreferrer" class="btn-glass w-full py-2 rounded-lg inline-block">
                                 Visit Ko-fi Page
                             </a>
@@ -140,74 +137,73 @@
                     </div>
                 </div>
 
-                <!-- Touch Controls for Mobile -->
-                <div id="touch-controls" class="mt-4 flex w-full max-w-xs justify-between items-center flex-shrink-0">
-                    <div class="flex gap-4">
+                <!-- Touch Controls -->
+                <div id="touch-controls" class="mt-2 flex w-full max-w-xs justify-between items-center flex-shrink-0">
+                    <div class="flex gap-2">
                         <button id="left-button" class="btn-glass rounded-full touch-control">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                         </button>
                         <button id="right-button" class="btn-glass rounded-full touch-control">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                         </button>
                     </div>
-                    <div class="flex gap-4">
+                    <div class="flex gap-2">
                         <button id="rotate-button" class="btn-glass rounded-full touch-control">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                         </button>
                         <button id="drop-button" class="btn-glass rounded-full touch-control">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
                         </button>
                     </div>
                 </div>
             </div>
 
             <!-- Game Info Panel -->
-            <div class="glass-panel p-4 w-full max-w-xs md:w-64 flex flex-col gap-4 mt-4 md:mt-0 flex-shrink-0 md:max-h-[90vh] md:overflow-y-auto">
+            <div class="glass-panel p-3 w-2/5 max-w-xs md:w-56 flex flex-col gap-2 flex-shrink-0 h-full overflow-y-auto">
                 <!-- Sound Control Button -->
                 <div class="flex justify-end">
                     <button id="mute-button" class="text-yellow-400 hover:text-white transition-colors">
-                        <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                        <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="1" x2="1" y2="23"></line></svg>
+                        <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                        <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="1" x2="1" y2="23"></line></svg>
                     </button>
                 </div>
 
                 <!-- High Score Display on Panel -->
-                <div class="mb-2">
-                    <h2 class="text-xl font-bold text-center text-yellow-glow mb-2">Top 5 Scores</h2>
-                    <ol id="highscore-panel-list" class="highscore-list text-sm space-y-1"></ol>
+                <div class="mb-1">
+                    <h2 class="text-lg font-bold text-center text-yellow-glow mb-1">Top 5</h2>
+                    <ol id="highscore-panel-list" class="highscore-list text-xs space-y-1"></ol>
                 </div>
 
                 <div class="w-full h-px bg-yellow-500/20"></div>
 
                 <div class="flex justify-between items-center w-full">
-                    <h2 class="text-2xl font-bold text-yellow-glow">Score</h2>
-                    <p id="score" class="text-3xl font-bold text-white">0</p>
+                    <h2 class="text-lg font-bold text-yellow-glow">Score</h2>
+                    <p id="score" class="text-xl font-bold text-white">0</p>
                 </div>
                  <div class="flex justify-between items-center w-full">
-                    <h2 class="text-2xl font-bold text-yellow-glow">Lines</h2>
-                    <p id="lines" class="text-3xl font-bold text-white">0</p>
+                    <h2 class="text-lg font-bold text-yellow-glow">Lines</h2>
+                    <p id="lines" class="text-xl font-bold text-white">0</p>
                 </div>
                 <div class="flex justify-between items-center w-full">
-                    <h2 class="text-2xl font-bold text-yellow-glow">Level</h2>
-                    <p id="level" class="text-3xl font-bold text-white">1</p>
+                    <h2 class="text-lg font-bold text-yellow-glow">Level</h2>
+                    <p id="level" class="text-xl font-bold text-white">1</p>
                 </div>
                 
                 <div class="w-full h-px bg-yellow-500/20"></div>
 
-                <div>
-                    <h2 class="text-lg font-bold text-center mt-2 text-yellow-glow">Next Orb</h2>
-                    <canvas id="next-piece-canvas" width="120" height="120"></canvas>
+                <div class="text-center">
+                    <h2 class="text-base font-bold mt-1 text-yellow-glow">Next Orb</h2>
+                    <canvas id="next-piece-canvas" width="80" height="80" class="mx-auto"></canvas>
                 </div>
-                <button id="start-button" class="btn-glass w-full py-3 mt-4 rounded-lg text-xl font-bold">Start Game</button>
+                <button id="start-button" class="btn-glass w-full py-2 mt-auto rounded-lg text-lg font-bold">Start Game</button>
+                <!-- Donate Button Moved Here -->
+                <button id="donate-button" class="btn-glass w-full py-2 mt-2 rounded-lg text-lg font-bold flex items-center justify-center gap-2">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                    <span>Donate</span>
+                </button>
             </div>
         </div>
     </div>
-    
-    <!-- Donate Button -->
-    <button id="donate-button" class="fixed bottom-4 right-4 btn-glass rounded-full p-3 flex items-center gap-2 z-40">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-        <span class="hidden sm:inline">Donate</span>
-    </button>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -443,14 +439,14 @@
                 const shape = piece.shape;
                 const shapeWidth = shape[0].length;
                 const shapeHeight = shape.length;
-                const startX = (nextCanvas.width - shapeWidth * 20) / 2;
-                const startY = (nextCanvas.height - shapeHeight * 20) / 2;
+                const startX = (nextCanvas.width - shapeWidth * 15) / 2;
+                const startY = (nextCanvas.height - shapeHeight * 15) / 2;
                 shape.forEach((row, y) => {
                     row.forEach((value, x) => {
                         if (value !== 0) {
-                            const centerX = startX + x * 20 + 10;
-                            const centerY = startY + y * 20 + 10;
-                            const radius = 10;
+                            const centerX = startX + x * 15 + 7.5;
+                            const centerY = startY + y * 15 + 7.5;
+                            const radius = 7.5;
                             const gradient = nextCtx.createRadialGradient(centerX - radius * 0.25, centerY - radius * 0.25, radius * 0.1, centerX, centerY, radius);
                             gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
                             gradient.addColorStop(0.5, color);
